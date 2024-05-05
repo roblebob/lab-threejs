@@ -14,12 +14,13 @@ import {
   FilePicker,
   Tab,
 } from "../components";
+// import { set } from "mongoose";
 
 const Customizer = () => {
   const snap = useSnapshot(state);
 
   const [file, setFile] = useState("");
-  const [promt, setPromt] = useState("");
+  const [prompt, setPrompt] = useState("");
   const [generatingImage, setGeneratingImage] = useState(false);
   const [activeEditorTab, setActiveEditorTab] = useState("");
   const [activeFilterTab, setActiveFilterTab] = useState({
@@ -78,9 +79,39 @@ const Customizer = () => {
       case "filepicker":
         return <FilePicker file={file} setFile={setFile} readFile={readFile} />;
       case "aipicker":
-        return <AIPicker />;
+        return <AIPicker 
+          prompt={prompt}
+          setPrompt={setPrompt}
+          generatingImage={generatingImage}
+          handleSubmit={handleSubmit}
+          />;
       default:
         return null;
+    }
+  };
+
+  const handleSubmit = async (type) => {
+    if (!prompt) return alert("Please enter a prompt");
+    
+    try {
+      setGeneratingImage(true);
+      const response = await fetch('http://localhost:8080/api/v1/dalle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
+      });
+      
+      const data = await response.json();
+      console.log(data);
+      handleDecals(type, `data:image/jpeg;base64,${data.photo}`);
+
+    } catch (error) {
+      alert(error);
+    } finally {
+      setGeneratingImage(false);
+      setActiveEditorTab("");
     }
   };
 
